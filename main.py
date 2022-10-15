@@ -31,4 +31,4 @@ async def dado(interaction: discord.Interaction):
     numero = random.randint(1, 6)
     await interaction.response.send_message(f"o cão conseguiu tirar um {numero}", ephemeral = False) 
 
-aclient.run('MTAzMDk4MTY5NjUyODU4NDc5NQ.GsnFVh.px4okRUIPODDbWEMt5hwl0lExFuWlULLsmoly4')
+aclient.run(os.getenv('BOT_TOKEN'))
