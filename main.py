@@ -103,13 +103,39 @@ class User():
         self.balance += value
         
     def saldo(self):
-        string_formatada = f'''
-                >>>{self.name}\n
-                :money_with_wings: : {self.balance}\n
-                :bank: : {self.balance}
-                '''
+        string_formatada =(
+        f'{self.name}\n'
+        f':money_with_wings: : {self.balance}\n'
+        f':bank: : {self.balance}'
+        )
         return string_formatada   
-                
+
+@bot.command()
+async def trabalhar(ctx):
+    verificaUsuario(ctx)
+    user_id = ctx.message.author.id
+    username = ctx.message.author.name 
+    work_list = {'A':random.randint(20,60) * -1,
+                 'B':random.randint(20,60),
+                 'C':random.randint(30,90)}
+    work_weight = ['C'] * 5 + ['A'] * 15 + ['B'] * 80 #atribui pessos as variaveis
+   
+    #string = f'{random.choice(worl_weight)}'
+    choice = random.choice(work_weight)
+    value = work_list[choice]
+    emoji = ":money_with_wings:"
+    resp = ""
+    
+    if choice == 'A':
+        resp+=f"{username} jogou pastel no cliente e foi multado em {emoji}{value}"
+    if choice == 'B':
+        resp+=f"Mais um dia de trabalho arduo e ganhou {emoji}{value}"
+    if choice == 'C':
+        resp+=f"No fim do expediente um cliente te deu gorjeta com isso ganhou {emoji}{value}"
+        
+    user_list[user_id].work(value)
+    await ctx.send (resp)
+                    
 
 def verificaUsuario(ctx):
     user_id = ctx.message.author.id
@@ -123,7 +149,7 @@ async def saldo(ctx):
     user_id = ctx.message.author.id
     verificaUsuario(ctx) 
     user = user_list[user_id]   
-    await ctx.send (user.saldo())
+    await ctx.send (embed=embed_msg(ctx,None,user.saldo()))
 
 @bot.command()
 async def placar(ctx):
@@ -133,6 +159,27 @@ async def placar(ctx):
         return
     users +="\n" . join(f'{index}. ' + str(user.name) for index,user in enumerate(user_list.values()))
     await ctx.send (users)
+    
+def embed_msg(ctx,title,desc,color = 0x4fff4d): 
+    #color = 0x4fff4d #cor da barra lateral
+    author_img = ctx.message.author.display_avatar.url
+    embed_box = discord.Embed(title=title, description=desc, color=color,url =author_img)
+    embed_box.set_footer(text=ctx.author)
+    embed_box.set_author(name=ctx.author.name,icon_url = author_img)
+    return embed_box
+    
+@bot.command()
+async def embed(ctx):
+    title ="Custom Message Window Opened!"
+    desc = 'Hey Bhavyadeep! I have opened the custom message window now. You can see it is visible to you now.'     
+    color = 0x4fff4d #cor da barra lateral
+    author_img = ctx.message.author.display_avatar.url
+    
+    embed_box = discord.Embed(title=title, description=desc, color=color,url =author_img)
+    embed_box.set_footer(text=ctx.author)
+    embed_box.set_author(name=ctx.author.name,icon_url =author_img)
+    #embed_box.set_image(url = ctx.message.author.display_avatar.url)
+    await ctx.channel.send(embed=embed_box)
     
 @bot.command()
 async def userinfo(ctx: commands.Context, user: discord.User):
