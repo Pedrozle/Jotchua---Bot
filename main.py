@@ -4,6 +4,9 @@ from discord import app_commands
 from discord.ext import commands
 from dotenv import load_dotenv
 
+user_list = {}
+
+
 load_dotenv()
 description = '''An example bot to showcase the discord.ext.commands extension
 module.
@@ -86,7 +89,50 @@ async def _bot(ctx):
     """Is the bot cool?"""
     await ctx.send('Yes, the bot is cool.')
 
+@bot.command()
+async def test(ctx):
+      await ctx.send (ctx.message.author)
 
+class User():
+    def __init__(self,userid,name):
+        self.userid = userid
+        self.name = name
+        self.balance = 0
+        
+    def work(self,value):
+        self.balance += value
+        
+    def saldo(self):
+        string_formatada = f'''
+                >>>{self.name}\n
+                :money_with_wings: : {self.balance}\n
+                :bank: : {self.balance}
+                '''
+        return string_formatada   
+                
+
+def verificaUsuario(ctx):
+    user_id = ctx.message.author.id
+    username = ctx.message.author.name 
+    if(user_id not in user_list):
+        user_list.update({user_id:User(user_id,username)})
+
+@bot.command()
+async def saldo(ctx):
+    #print(type(ctx.message.author.name))
+    user_id = ctx.message.author.id
+    verificaUsuario(ctx) 
+    user = user_list[user_id]   
+    await ctx.send (user.saldo())
+
+@bot.command()
+async def placar(ctx):
+    users='>>> '
+    if(len(user_list) == 0):
+        ctx.send (f'Tem niguem :(')
+        return
+    users +="\n" . join(f'{index}. ' + str(user.name) for index,user in enumerate(user_list.values()))
+    await ctx.send (users)
     
 @bot.command()
 async def userinfo(ctx: commands.Context, user: discord.User):
