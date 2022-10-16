@@ -13,8 +13,8 @@ Aqui está a lista de comandos que você poderá pedir ao cão!
 
 |                |Comando                         |Resultado                         |
 |----------------|-------------------------------|-----------------------------|
-|Jotchua Decide  |`decida arg_1 ou arg_2`        |Escolhe para você um dos dois argumentos que foram passados para ele            |
-|Rolar dados RPG | `dado xdx` | Rola x dados d x valor, exemplo "dado 1d20" rolaria 
+|Jotchua Decide  |`decida arg_1 ou arg_2`        |Escolhe para você um dos dois argumentos que foram passados para ele (pode passar mais de 2 argumentos)           |
+|Rolar dados RPG | `dado xdx` | Rola x dados d x valor, exemplo "dado 1d20" rolaria um dado d20 uma vez
 
 ## Criadores do Jotchua Bot
 
