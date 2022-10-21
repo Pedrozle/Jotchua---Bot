@@ -17,7 +17,7 @@ intents = discord.Intents.default()
 intents.members = True
 intents.message_content = True
 
-bot = commands.Bot(command_prefix='jot!', description=description, intents=intents)
+bot = commands.Bot(command_prefix=['jot!','j!'], description=description, intents=intents)
 
 @bot.event
 async def on_ready():
@@ -97,11 +97,11 @@ class User():
     def __init__(self,userid,name):
         self.userid = userid
         self.name = name
-        self.balance = 0
+        self.balance = 50
         
     def work(self,value):
         self.balance += value
-        
+            
     def saldo(self):
         string_formatada =(
         f'{self.name}\n'
@@ -110,9 +110,12 @@ class User():
         )
         return string_formatada   
 
+    def getsaldo(self):
+        return self.balance
+
 @bot.command()
 async def trabalhar(ctx):
-    verificaUsuario(ctx)
+    verificaUsuario(ctx.message.author) 
     user_id = ctx.message.author.id
     username = ctx.message.author.name 
     work_list = {'A':random.randint(20,60) * -1,
@@ -127,19 +130,19 @@ async def trabalhar(ctx):
     resp = ""
     
     if choice == 'A':
-        resp+=f"{username} jogou pastel no cliente e foi multado em {emoji}{value}"
+        resp+=f"<@{user_id}> Jogou pastel no cliente e foi multado em {emoji}{value}"
     if choice == 'B':
-        resp+=f"Mais um dia de trabalho arduo e ganhou {emoji}{value}"
+        resp+=f"<@{user_id}> Em mais um dia de trabalho arduo e ganhou {emoji}{value}"
     if choice == 'C':
-        resp+=f"No fim do expediente um cliente te deu gorjeta com isso ganhou {emoji}{value}"
+        resp+=f" <@{user_id}> No fim do expediente um cliente te deu gorjeta com isso ganhou {emoji}{value}"
         
     user_list[user_id].work(value)
     await ctx.send (resp)
                     
 
-def verificaUsuario(ctx):
-    user_id = ctx.message.author.id
-    username = ctx.message.author.name 
+def verificaUsuario(user) :
+    user_id = user.id
+    username = user.name 
     if(user_id not in user_list):
         user_list.update({user_id:User(user_id,username)})
 
@@ -147,7 +150,7 @@ def verificaUsuario(ctx):
 async def saldo(ctx):
     #print(type(ctx.message.author.name))
     user_id = ctx.message.author.id
-    verificaUsuario(ctx) 
+    verificaUsuario(ctx.message.author) 
     user = user_list[user_id]   
     await ctx.send (embed=embed_msg(ctx,None,user.saldo()))
 
@@ -159,6 +162,49 @@ async def placar(ctx):
         return
     users +="\n" . join(f'{index}. ' + str(user.name) for index,user in enumerate(user_list.values()))
     await ctx.send (users)
+
+@bot.command()
+async def roubar(ctx: commands.Context, user: discord.User = None):
+    ladrao = ctx.message.author
+    
+    
+    if(user == None):
+        await ctx.send(f':no_entry_sign:  Não da pra roubar fantasma digite j!roubar <Usuario>')
+    verificaUsuario(ladrao)
+    verificaUsuario(user)
+    
+    saldo_da_vitima = user_list[user.id].getsaldo()
+    if(saldo_da_vitima <= 0):
+        await ctx.send (f"{user.name} Não tem 1 centavo na mao" )
+        return
+    
+    robb_weight = [1] * 80 + [2] * 20
+    robb_odds = {1:random.randint(int(saldo_da_vitima*.2),int(saldo_da_vitima*.5)),
+                 2:random.randint(int(saldo_da_vitima*.2),int(saldo_da_vitima))
+                }
+    resp="?"
+    choice = random.choice(robb_weight)
+    value = robb_odds[choice]
+    emoji = ":money_with_wings:"
+    
+    print(f'{choice}----{value}')
+    
+    if user_list[user.id].getsaldo() > 1:
+        print("1")
+        if value > 80:
+            resp = f"> {ladrao.name} Deu uma Rasteira em <@{user.id}> e roubou quase tudo ({emoji}{value})"
+        else:
+            if value < 15:
+                resp = f"> <@{user.id}>  deixou cair ({emoji}{value}) da carteira e {ladrao.name} não deu mole "
+            else:
+                resp = f"> {ladrao.name} Roubou a pequena quantia de ({emoji}{value}) do <@{user.id}>"
+    else:
+        resp = f"> {user.name} Não tem 1 centavo na mao"
+        
+    user_list[user.id].work(value*-1)
+    user_list[ladrao.id].work(value)
+    
+    await ctx.channel.send(resp)
     
 def embed_msg(ctx,title,desc,color = 0x4fff4d): 
     #color = 0x4fff4d #cor da barra lateral
@@ -182,7 +228,7 @@ async def embed(ctx):
     await ctx.channel.send(embed=embed_box)
     
 @bot.command()
-async def userinfo(ctx: commands.Context, user: discord.User):
+async def userinfo(ctx: commands.Context, user: discord.User = None):
     # In the command signature above, you can see that the `user`
     # parameter is typehinted to `discord.User`. This means that
     # during command invocation we will attempt to convert
@@ -196,6 +242,10 @@ async def userinfo(ctx: commands.Context, user: discord.User):
 
     # If the conversion is successful, we will have a `discord.User` instance
     # and can do the following:
+    
+    if(user==None):
+        user = ctx.author
+    
     user_id = user.id
     username = user.name
     avatar = user.display_avatar.url
