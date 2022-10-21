@@ -20,7 +20,8 @@ Aqui está a lista de comandos que você poderá pedir ao cão!
 
 |                |Comando                         |Resultado                         |
 |----------------|--------------------------------|-----------------------------     |
-|Saldo  |`balance` ou `balance _nome_usuario_`   |Exibe o saldo atual do membro especificado ou o seu          |
+|Saldo  |`saldo` ou `saldo _nome_usuario_`   |Exibe o saldo atual do membro especificado ou o seu próprio saldo |
+|Trabalho |`trabalhar` |Você sai a trabalho, gerando um resultado aleatório.  |
 
 ## Criadores do Jotchua Bot
 
