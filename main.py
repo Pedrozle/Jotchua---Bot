@@ -20,6 +20,11 @@ intents.message_content = True
 bot = commands.Bot(command_prefix=['jot!','j!'], description=description, intents=intents)
 
 @bot.event
+async def on_message(message):
+    message.content = message.content.lower()
+    await bot.process_commands(message)
+
+@bot.event
 async def on_ready():
     print(f'Logged in as {bot.user} (ID: {bot.user.id})')
     print('------')
@@ -51,9 +56,8 @@ async def decida(ctx, *choices: str):
         await ctx.send("Temq colocar algo ne")
         return
     
-    choices_list = list(choices)
-    for choice in choices_list:
-        if choice == "ou":choices_list.remove(choice)
+    choices_list = list(choices).split('d')
+    
 
     """Chooses between multiple choices."""
     result = "Eu escolho acho que"
