@@ -85,17 +85,26 @@ async def dado(ctx, * ,dice : str = None):
 
 @bot.command(description='Pede ao cão para decidir entre um ou outro')
 async def decida(ctx, *choices: str):
-    
+
     if(tavazio(choices)):
         await ctx.send("Temq colocar algo ne")
         return
-    
-    choices_list = list(choices).split('d')
-    
 
-    """Chooses between multiple choices."""
-    result = "Eu escolho acho que"
-    result = f"{result} {random.choice(choices_list)}"
+    choices_list = []
+    frase = ""
+    for c in choices:
+        if c != 'ou':
+            print(c)
+            frase += f"{c} "
+        else:
+            choices_list.append(frase)
+            print(frase)
+            frase = ""
+
+    choices_list.append(frase)
+    
+    result = "Eu escolho acho que\n"
+    result = f"{result}**{random.choice(choices_list)}** "
     await ctx.send(result)
 
 
