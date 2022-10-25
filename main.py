@@ -4,6 +4,8 @@ from discord import app_commands
 from discord.ext import commands
 from dotenv import load_dotenv
 
+from discord.ui import Button , View
+
 user_list = {}
 
 
@@ -19,14 +21,31 @@ intents.message_content = True
 
 bot = commands.Bot(command_prefix=['jot!','j!'], description=description, intents=intents)
 
+
+def updateData(ctx):
+    if(ctx.id != bot.user.id):
+        if(user_list[ctx.id].name.lower() != ctx.name.lower()):
+            user_list[ctx.id] = ctx.name.lower()
+        if(user_list[ctx.id].apelido.lower() != ctx.display_name.lower()):
+            user_list[ctx.id].apelido = ctx.display_name.lower()
+    
+
 @bot.event
 async def on_message(message):
+    #print(message.author)
+    updateData(message.author)
     message.content = message.content.lower()
     await bot.process_commands(message)
 
 @bot.event
 async def on_ready():
     print(f'Logged in as {bot.user} (ID: {bot.user.id})')
+    print('------')
+    for guild in bot.guilds:
+        print(guild)
+        for member in guild.members:
+            verificaUsuario(member)
+            print(member)
     print('------')
 
 
@@ -35,6 +54,21 @@ def tavazio(content):
         return True
     else:
         return False
+
+@bot.command()
+async def butao(ctx):
+    button1 = Button(label="Sim",style=discord.ButtonStyle.green , emoji="💰")
+    button2 = Button(label="No",style=discord.ButtonStyle.red, emoji="🙅‍♂️")
+    
+    async def button_action(interaction):
+        await interaction.response.send_message(content="aaaa",allowed_mentions=None)
+    
+    button1.callback = button_action
+    
+    view =  View()
+    view.add_item(button1)
+    view.add_item(button2)
+    await ctx.send("content",view=view)
 
 @bot.command()
 async def dado(ctx, * ,dice : str = None):
@@ -51,17 +85,26 @@ async def dado(ctx, * ,dice : str = None):
 
 @bot.command(description='Pede ao cão para decidir entre um ou outro')
 async def decida(ctx, *choices: str):
-    
+
     if(tavazio(choices)):
         await ctx.send("Temq colocar algo ne")
         return
-    
-    choices_list = list(choices).split('d')
-    
 
-    """Chooses between multiple choices."""
-    result = "Eu escolho acho que"
-    result = f"{result} {random.choice(choices_list)}"
+    choices_list = []
+    frase = ""
+    for c in choices:
+        if c != 'ou':
+            print(c)
+            frase += f"{c} "
+        else:
+            choices_list.append(frase)
+            print(frase)
+            frase = ""
+
+    choices_list.append(frase)
+    
+    result = "Eu escolho acho que\n"
+    result = f"{result}**{random.choice(choices_list)}** "
     await ctx.send(result)
 
 
@@ -70,7 +113,6 @@ async def repeat(ctx, times: int , content='repeating...'):
     """Repeats a message multiple times."""
     for i in range(times):
         await ctx.send(content)
-
 
 @bot.command()
 async def joined(ctx, member: discord.Member):
@@ -98,10 +140,12 @@ async def test(ctx):
       await ctx.send (ctx.message.author)
 
 class User():
-    def __init__(self,userid,name):
-        self.userid = userid
+    def __init__(self,userid,name,apelido):
+        self.id = userid
         self.name = name
-        self.balance = 50
+        self.balance = 0
+        self.apelido = apelido
+        self.bank = 0
         
     def work(self,value):
         self.balance += value
@@ -110,22 +154,29 @@ class User():
         string_formatada =(
         f'{self.name}\n'
         f':money_with_wings: : {self.balance}\n'
-        f':bank: : {self.balance}'
+        f':bank: : {self.bank}'
         )
-        return string_formatada   
+        return string_formatada 
+    
+    def deposito(self,value):
+        self.bank += value
+    
+    def saque(self,value):
+        self.balance+=value
+        self.bank-=value
 
     def getsaldo(self):
         return self.balance
 
 @bot.command()
 async def trabalhar(ctx):
-    verificaUsuario(ctx.message.author) 
     user_id = ctx.message.author.id
     username = ctx.message.author.name 
     work_list = {'A':random.randint(20,60) * -1,
                  'B':random.randint(20,60),
-                 'C':random.randint(30,90)}
-    work_weight = ['C'] * 5 + ['A'] * 15 + ['B'] * 80 #atribui pessos as variaveis
+                 'C':random.randint(30,90),
+                 'D':random.randint(20,30)}
+    work_weight = ['C'] * 15 + ['A'] * 25 + ['B'] * 80 + ['D'] * 30 #atribui pessos as variaveis
    
     #string = f'{random.choice(worl_weight)}'
     choice = random.choice(work_weight)
@@ -133,50 +184,81 @@ async def trabalhar(ctx):
     emoji = ":money_with_wings:"
     resp = ""
     
-    if choice == 'A':
-        resp+=f"<@{user_id}> Jogou pastel no cliente e foi multado em {emoji}{value}"
-    if choice == 'B':
-        resp+=f"<@{user_id}> Em mais um dia de trabalho arduo e ganhou {emoji}{value}"
-    if choice == 'C':
-        resp+=f" <@{user_id}> No fim do expediente um cliente te deu gorjeta com isso ganhou {emoji}{value}"
-        
+    response_text = {
+        'A':f"<@{user_id}> Jogou pastel no cliente e foi multado em {emoji}**{value}**",
+        'B':f"<@{user_id}> Em mais um dia de trabalho arduo e ganhou {emoji}**{value}**",
+        'C':f" <@{user_id}> No fim do expediente um cliente te deu gorjeta com isso ganhou {emoji}**{value}**",
+        'D':f" <@{user_id}> Esqueceu de bater o ponto e recebeu apenas{emoji}**{value}**"
+    }
+    
+    resp = response_text[choice]
+    
     user_list[user_id].work(value)
     await ctx.send (resp)
                     
 
-def verificaUsuario(user) :
+def verificaUsuario(user):
     user_id = user.id
     username = user.name 
+    apelido = user.display_name
     if(user_id not in user_list):
-        user_list.update({user_id:User(user_id,username)})
+        user_list.update({user_id:User(user_id,username,apelido)})
 
 @bot.command()
 async def saldo(ctx):
     #print(type(ctx.message.author.name))
     user_id = ctx.message.author.id
-    verificaUsuario(ctx.message.author) 
     user = user_list[user_id]   
-    await ctx.send (embed=embed_msg(ctx,None,user.saldo()))
+    await ctx.send (embed=embed_msg(ctx,None,None,None,user.saldo()))
+
 
 @bot.command()
 async def placar(ctx):
-    users='>>> '
-    if(len(user_list) == 0):
-        ctx.send (f'Tem niguem :(')
-        return
-    users +="\n" . join(f'{index}. ' + str(user.name) for index,user in enumerate(user_list.values()))
-    await ctx.send (users)
+    a = ':first_place:' 
+    emojis = [':first_place:' , ':second_place:' , ':third_place:' ]
+    emojiNum = [':one:',':two:',':three:' ,':four:' ,':five:' ,':six:', ':seven:' ,':eight:', ':nine:', ':keycap_ten:' ]
+    top10emojis = 'emojiNum[index] if index <= int(len(emojiNum))-1 else index+1'
+    users=''
+    sorted_list = list(user_list.values())
+    sorted_list.sort(key=lambda x: x.balance, reverse=True)
+    users +="\n" . join(f'**{index+1}.** {user.name} - :dollar: {user.balance}' for index,user in enumerate(sorted_list))
+    await ctx.send (embed=embed_msg( 
+                                    ctx, 
+                                    ctx.guild.icon.url , 
+                                    ctx.guild.name,
+                                    "Placar dor Milionários", 
+                                    users 
+                                    ))
 
 @bot.command()
-async def roubar(ctx: commands.Context, user: discord.User = None):
+async def members(ctx):
+    string_member = ""
+    for guild in bot.guilds:
+        print(guild)
+        for member in guild.members:
+            print(member.id)
+            print(user_list.keys())
+            string_member +=f'\n{member}'
+    await ctx.send (string_member)
+
+def getid(name):
+    user = None
+    for _user in user_list.values():
+        if(_user.name.lower() == name.lower()):
+            user = user_list[_user.id]
+        else:
+            if(_user.apelido.lower() == name.lower()):
+                user = user_list[_user.id]
+    return user
+
+@bot.command()
+async def roubar(ctx: commands.Context, Username:str):
     ladrao = ctx.message.author
-    
-    
+    user = getid(Username)
     if(user == None):
-        await ctx.send(f':no_entry_sign:  Não da pra roubar fantasma digite j!roubar <Usuario>')
-    verificaUsuario(ladrao)
-    verificaUsuario(user)
-    
+        await ctx.send(f':no_entry_sign:  Não da pra roubar fantasma , digite j!roubar <Usuario>')
+        return
+
     saldo_da_vitima = user_list[user.id].getsaldo()
     if(saldo_da_vitima <= 0):
         await ctx.send (f"{user.name} Não tem 1 centavo na mao" )
@@ -191,14 +273,11 @@ async def roubar(ctx: commands.Context, user: discord.User = None):
     value = robb_odds[choice]
     emoji = ":money_with_wings:"
     
-    print(f'{choice}----{value}')
-    
     if user_list[user.id].getsaldo() > 1:
-        print("1")
-        if value > 80:
+        if value > saldo_da_vitima*.80:
             resp = f"> {ladrao.name} Deu uma Rasteira em <@{user.id}> e roubou quase tudo ({emoji}{value})"
         else:
-            if value < 15:
+            if value < saldo_da_vitima*.80:
                 resp = f"> <@{user.id}>  deixou cair ({emoji}{value}) da carteira e {ladrao.name} não deu mole "
             else:
                 resp = f"> {ladrao.name} Roubou a pequena quantia de ({emoji}{value}) do <@{user.id}>"
@@ -210,12 +289,19 @@ async def roubar(ctx: commands.Context, user: discord.User = None):
     
     await ctx.channel.send(resp)
     
-def embed_msg(ctx,title,desc,color = 0x4fff4d): 
+def embed_msg(ctx,inputImg,embedTitle,title,desc,color = 0x4fff4d): 
     #color = 0x4fff4d #cor da barra lateral
-    author_img = ctx.message.author.display_avatar.url
-    embed_box = discord.Embed(title=title, description=desc, color=color,url =author_img)
-    embed_box.set_footer(text=ctx.author)
-    embed_box.set_author(name=ctx.author.name,icon_url = author_img)
+    titleimg = inputImg
+    footertext = ctx.author
+    if(titleimg==None):
+        titleimg = ctx.message.author.display_avatar.url
+    if(embedTitle == None):
+        embedTitle = ctx.author.name
+    if(embedTitle == ctx.guild.name):
+        footertext = ""
+    embed_box = discord.Embed(title=title, description=desc, color=color)
+    embed_box.set_footer(text=footertext)
+    embed_box.set_author(name=embedTitle,icon_url = titleimg)
     return embed_box
     
 @bot.command()
