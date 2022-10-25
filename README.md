@@ -7,7 +7,7 @@ Olá! Boas vindas ao repositório do **Jotchua Bot**.
 ## Comandos
 Aqui está a lista de comandos que você poderá pedir ao cão!
 
-> **Nota:** todos os comandos devem iniciar com `jotchua!`
+> **Nota:** todos os comandos devem iniciar com `j!` ou `jot!`
 
 ##### Comandos Básicos
 
@@ -22,6 +22,7 @@ Aqui está a lista de comandos que você poderá pedir ao cão!
 |----------------|--------------------------------|-----------------------------     |
 |Saldo  |`saldo` ou `saldo _nome_usuario_`   |Exibe o saldo atual do membro especificado ou o seu próprio saldo |
 |Trabalho |`trabalhar` |Você sai a trabalho, gerando um resultado aleatório.  |
+|Roubo |`roubar <usuario>` |você tenta roubar pouco, metade ou tudo do usuario|
 
 ## Criadores do Jotchua Bot
 
