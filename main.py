@@ -1,8 +1,11 @@
+from datetime import datetime
 from logging import raiseExceptions
 import discord, os, random
 from discord import app_commands
 from discord.ext import commands
 from dotenv import load_dotenv
+
+from discord.utils import get
 
 from discord.ui import Button , View
 
@@ -289,20 +292,20 @@ async def roubar(ctx: commands.Context, Username:str):
     
     await ctx.channel.send(resp)
     
-def embed_msg(ctx,inputImg,embedTitle,title,desc,color = 0x4fff4d): 
+def embed_msg(ctx, icon_header: str = None, title_header: str = None, title_content: str = None , desc_content: str = None, img_content: str = None, footer: str = None): 
     #color = 0x4fff4d #cor da barra lateral
-    titleimg = inputImg
-    footertext = ctx.author
-    if(titleimg==None):
-        titleimg = ctx.message.author.display_avatar.url
-    if(embedTitle == None):
-        embedTitle = ctx.author.name
-    if(embedTitle == ctx.guild.name):
-        footertext = ""
-    embed_box = discord.Embed(title=title, description=desc, color=color)
-    embed_box.set_footer(text=footertext)
-    embed_box.set_author(name=embedTitle,icon_url = titleimg)
+    color = pick_color()
+    embed_box = discord.Embed(title=title_content, description=desc_content, color=color)
+
+    embed_box.set_author(name=title_header, icon_url=icon_header)
+    embed_box.set_footer(text=footer)
+    embed_box.set_image(url = img_content)
+    
     return embed_box
+
+def pick_color():
+    colors = [0x4fff4d, 0x07a6eb, 0x843af2, 0xab163e, 0xf05716, 0xf5ff33, 0x520808, 0xff00ee]
+    return random.choice(colors)
     
 @bot.command()
 async def embed(ctx):
@@ -314,32 +317,29 @@ async def embed(ctx):
     embed_box = discord.Embed(title=title, description=desc, color=color,url =author_img)
     embed_box.set_footer(text=ctx.author)
     embed_box.set_author(name=ctx.author.name,icon_url =author_img)
-    #embed_box.set_image(url = ctx.message.author.display_avatar.url)
+    embed_box.set_image(url = ctx.message.author.display_avatar.url)
     await ctx.channel.send(embed=embed_box)
     
 @bot.command()
-async def userinfo(ctx: commands.Context, user: discord.User = None):
-    # In the command signature above, you can see that the `user`
-    # parameter is typehinted to `discord.User`. This means that
-    # during command invocation we will attempt to convert
-    # the value passed as `user` to a `discord.User` instance.
-    # The documentation notes what can be converted, in the case of `discord.User`
-    # you pass an ID, mention or username (discrim optional)
-    # E.g. 80088516616269824, @Danny or Danny#0007
-
-    # NOTE: typehinting acts as a converter within the `commands` framework only.
-    # In standard Python, it is use for documentation and IDE assistance purposes.
-
-    # If the conversion is successful, we will have a `discord.User` instance
-    # and can do the following:
+async def userinfo(ctx: commands.Context, username: str = None):
     
-    if(user==None):
+    if(username==None):
         user = ctx.author
-    
-    user_id = user.id
+    else:
+        user = getid(username)
+        if(user==None):
+            await ctx.send(f':no_entry_sign: Usuário não encontrado!')
+            return
+        user = get(bot.get_all_members(), id=user.id)
+
+    title_header = "Usuário Encontrado!"
     username = user.name
     avatar = user.display_avatar.url
-    await ctx.send(f'User found: {user_id} -- {username}\n{avatar}')
+    joined_at = user.joined_at.replace(tzinfo=None)
+    diff = datetime.now() - joined_at
+    desc = f"Entrou no servidor há {diff.days} dias!"
+    footer = f"Perguntado por {ctx.author}"
+    await ctx.send(embed=embed_msg(ctx, title_header=title_header, title_content=username, desc_content=desc, img_content=avatar, footer=footer))
 
 
 bot.run(os.getenv('BOT_TOKEN'))
