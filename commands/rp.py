@@ -8,11 +8,7 @@ from methods import transacao, getid, embed_msg, user_list
 @commands.command()
 async def placar(ctx):
     """Exibe a lista de usuários no servidor e exibe o saldo total deles, ranqueados pelo saldo."""
-
-    a = ':first_place:' 
-    emojis = [':first_place:' , ':second_place:' , ':third_place:' ]
-    emojiNum = [':one:',':two:',':three:' ,':four:' ,':five:' ,':six:', ':seven:' ,':eight:', ':nine:', ':keycap_ten:' ]
-    top10emojis = 'emojiNum[index] if index <= int(len(emojiNum))-1 else index+1'
+    
     users=''
     sorted_list = list(user_list.values())
     sorted_list.sort(key=lambda x: x.balance, reverse=True)
@@ -28,7 +24,7 @@ async def placar(ctx):
 @commands.command()
 async def saldo(ctx):
     """Exibe o seu saldo atual! Quanto você tem na mão e no banco."""
-    
+
     user_id = ctx.message.author.id
     user = user_list[user_id]   
     await ctx.send (embed=embed_msg(ctx ,icon_header = ctx.author.display_avatar ,title_header=ctx.author,title_content="Saldo", desc_content = user.saldo()))
@@ -65,15 +61,41 @@ async def trabalhar(ctx):
 
 @commands.command()
 async def saque(ctx, valor : str = None):
+    """Saca o valor especificado
+
+    uso: saque <valor | tudo>
+
+    Argumentos:
+        - valor: Um valor inteiro de dinheiro a ser sacado
+        - tudo: Todo o dinheiro guardado
+    """
+    
     view =  await transacao(ctx,"Saque",valor)
 
 @commands.command()
 async def depositar(ctx, valor : str = None):
+    """Deposita o valor especificado
+
+    uso: depositar <valor | tudo>
+
+    Argumentos:
+        - valor: Um valor inteiro de dinheiro a ser depositado
+        - tudo: Guardar todo o dinheiro
+    """
+
     view = await transacao(ctx,"Deposito",valor)
 
 @commands.command()
 async def roubar(ctx: commands.Context, Username:str):
-    """Você rouba um valor aleatório de algum membro, boa sorte!"""
+    
+    """Você rouba um valor aleatório de algum membro, boa sorte!
+
+    uso: roubar <apelido | nome>
+
+    Argumentos:
+        - apelido: O apelido daquele membro neste servidor
+        - nome: O nome daquele usuário
+    """
 
     ladrao = ctx.message.author
     user = getid(Username)
@@ -111,7 +133,6 @@ async def roubar(ctx: commands.Context, Username:str):
     
     await ctx.channel.send(resp)
     
-
 async def setup(bot):
     # Every extension should have this function
     bot.add_command(placar)
