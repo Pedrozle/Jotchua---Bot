@@ -1,5 +1,5 @@
 from datetime import datetime
-from random import random
+import random
 import discord
 from discord.ext import commands
 from discord.utils import get
@@ -28,8 +28,15 @@ async def membros(ctx: commands.Context):
 
 @commands.command()
 async def info(ctx: commands.Context, username: str = None):
-    """Exibe informações sobre você ou sobre um usuário especificado"""
-    
+    """Exibe informações sobre você ou sobre um usuário especificado
+
+    uso: info <nada | apelido>
+
+    Argumentos:
+        - nada: Exibe informações sobre o seu usuário
+        - apelido: Exibe informações sobre o usuário com aquele apelido
+    """
+
     if(username==None):
         user = ctx.author
     else:
@@ -50,14 +57,43 @@ async def info(ctx: commands.Context, username: str = None):
     await ctx.send(embed=embed_msg(ctx, title_header=title_header, title_content=username, desc_content=desc, img_content=avatar, footer=footer))
 
 @commands.command()
-async def repetir(ctx, times: int , content='repeating...'):
-    """Repete uma mensagem várias vezes. repetir <nro vezes> <mensagem>"""
+async def repetir(ctx, times: int = None , *content : str):
+    """Repete uma mensagem várias vezes
+
+    uso: repetir <nro de vezes> <mensagem>
+
+    Argumentos:
+        - nro de vezes: Total de vezes que a mensagem será repetida
+        - mensagem: a mensagem a ser repetida
+    """
+    try:
+        if(tavazio(times)):
+            raise Exception("sim")
+    except Exception:
+        await ctx.send("Não dá pra repetir 0 vezes!\nBote um valor de repetição\nEx: `repetir 5 <mensagem>`")
+        return
+
+    if(tavazio(content)):
+        await ctx.send("Vai repetir oq?")
+        return
+
+    frase = ""
+    for c in content:
+        frase += f"{c} "
+
     for i in range(times):
-        await ctx.send(content)
+        await ctx.send(frase)
+    await ctx.send(f"Disse: <@{ctx.message.author.id}>")
 
 @commands.command()
 async def decida(ctx, *choices: str):
-    """Pede ao cão para decidir entre um ou outro. decida <arg> ou <arg> ou <arg> ..."""
+    """Pede ao cão para decidir entre várias opções
+
+    uso: decida <arg1> ou <arg2> ou ... ou <argN>
+
+    Argumentos:
+        - args: as opções a qual o Jotchua deve escolher
+    """
 
     if(tavazio(choices)):
         await ctx.send("Temq colocar algo ne")
@@ -82,7 +118,17 @@ async def decida(ctx, *choices: str):
 
 @commands.command()
 async def dado(ctx, * ,dice : str = None):
-    """Joga um dado dX, x vezes. dado xdX"""
+    """Joga um dado dX, x vezes
+
+    uso: dado <x>d<X>
+    ex: dado 2d10
+        resultado: 2, 6
+
+    Argumentos:
+        - x: quantidade de dados
+        - X: valor do dado
+    """
+
     try:
         if(tavazio(dice)):raise Exception("sim")
         rolls, limit = map(int, dice.split('d'))
@@ -90,7 +136,9 @@ async def dado(ctx, * ,dice : str = None):
         await ctx.send('Formato tem que ser INTdINT!')
         return
 
-    result = ', '.join(str(random.randint(1, limit)) for r in range(rolls))
+    result = 'Dados: ' if rolls > 1 else 'Dado: ' 
+    for r in range(rolls):
+        result += f" {str(random.randint(1, limit))}."
     await ctx.send(result)
 
 async def setup(bot):
