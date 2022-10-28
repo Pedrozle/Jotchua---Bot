@@ -14,12 +14,14 @@ async def membros(ctx: commands.Context):
 
     string_member = ""
     bot = ctx.bot
+    id = ctx.message.guild.id
     for guild in bot.guilds:
-        title_header = guild.name
-        icon_header = guild.icon
-        title_content = "Membros deste servidor: "
-        for member in guild.members:
-            string_member +=f'\n{member}'
+        if(guild.id == id):
+            title_header = guild.name
+            icon_header = guild.icon
+            title_content = "Membros deste servidor: "
+            for member in guild.members:
+                string_member +=f'\n{member}'
     
     desc_content = string_member
     footer = f"Perguntado por {ctx.author}"
