@@ -13,10 +13,7 @@ user_list = {}
 
 
 load_dotenv()
-description = '''An example bot to showcase the discord.ext.commands extension
-module.
-
-There are a number of utility commands being showcased here.'''
+description = '''Jotchua - Bot é o seu mais novo bot que você vai amar ter em seu servidor, auauau caralho'''
 
 intents = discord.Intents.default()
 intents.members = True
