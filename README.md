@@ -2,7 +2,7 @@
 
 Olá! Boas vindas ao repositório do **Jotchua Bot**. 
 
-
+Convide o Jotchua para seu servidor! [Bem vindo Jotchua!](https://discord.com/api/oauth2/authorize?client_id=1030981696528584795&permissions=0&scope=bot)
 
 ## Comandos
 Aqui está a lista de comandos que você poderá pedir ao cão!
