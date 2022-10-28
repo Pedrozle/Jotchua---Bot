@@ -4,8 +4,8 @@ import discord, os, random
 from discord import app_commands
 from discord.ext import commands
 from dotenv import load_dotenv
-
 from discord.utils import get
+from classes.user import User 
 
 from discord.ui import Button , View
 
@@ -26,11 +26,12 @@ bot = commands.Bot(command_prefix=['jot!','j!'], description=description, intent
 
 
 def updateData(ctx):
+    name = ctx.name
+    display_name = ctx.display_name
+    print(type(display_name))
     if(ctx.id != bot.user.id):
-        if(user_list[ctx.id].name.lower() != ctx.name.lower()):
-            user_list[ctx.id] = ctx.name.lower()
-        if(user_list[ctx.id].apelido.lower() != ctx.display_name.lower()):
-            user_list[ctx.id].apelido = ctx.display_name.lower()
+        if(user_list[ctx.id].apelido.lower() != display_name.lower()):
+            user_list[ctx.id].apelido = display_name.lower()
     
 
 @bot.event
@@ -51,6 +52,12 @@ async def on_ready():
             print(member)
     print('------')
 
+def verificaUsuario(user):
+    user_id = user.id
+    username = user.name 
+    apelido = user.display_name
+    if(user_id not in user_list):
+        user_list.update({user_id:User(user_id,username,apelido)})
 
 def tavazio(content):
     if(not content):
@@ -58,14 +65,75 @@ def tavazio(content):
     else:
         return False
 
+async def transacao(ctx,tipo : str, valor):
+    user_id = ctx.author.id
+    saldo = 0 
+    user = user_list[user_id]
+    if(tipo == "Deposito"):
+        saldo = user_list[user_id].getsaldo()
+    else:
+        saldo = user_list[user_id].getpoup()
+    if(valor == None):
+        await ctx.send(f':no_entry_sign: Necessario Especificar valor')
+        return
+    if(saldo <= 0 or int(valor) > saldo ):
+        await ctx.send(f':no_entry_sign: Necessario Especificar valor valido ')
+        return
+    
+    button1 = Button(label="Sim",style=discord.ButtonStyle.green , emoji='💰')
+    button2 = Button(label="No",style=discord.ButtonStyle.red, emoji="🙅‍♂️")
+    
+    async def button1_action(interaction):
+        if(valor=='all' or int(valor) > 0):
+            if(tipo == "Deposito"):
+                user_list[user_id].deposito(int(valor))
+            else:
+                user_list[user_id].saque(int(valor))
+        await interaction.response.send_message(content="{tipo} Com sucesso",allowed_mentions=None)
+    async def button2_action(interaction):
+        await interaction.response.send_message(content="{tipo} Cancelado",allowed_mentions=None)
+    
+    button1.callback = button1_action
+    button2.callback = button2_action
+    
+    view =  View()
+    view.add_item(button1)
+    view.add_item(button2)
+    
+    await ctx.send(view=view)
+
+@bot.group()
+async def cool(ctx):
+    """Says if a user is cool.
+
+    In reality this just checks if a subcommand is being invoked.
+    """
+    if ctx.invoked_subcommand is None:
+        await ctx.send(f'No, {ctx.subcommand_passed} is not cool')
+        
+
+@cool.command(name='bot')
+async def _bot(ctx):
+    """Is the bot cool?"""
+    await ctx.send('Yes, the bot is cool.')
+
+@bot.command()
+async def depositar(ctx, valor : str = None):
+    view = await transacao(ctx,"Deposito",valor)
+    await ctx.send("sim")
+    
+@bot.command()
+async def saque(ctx, valor : str = None):
+    view =  await transacao(ctx,"Saque",valor)
+    await ctx.send("sim",view=view)
+
 @bot.command()
 async def butao(ctx):
-    button1 = Button(label="Sim",style=discord.ButtonStyle.green , emoji="💰")
+    button1 = Button(label="Sim",style=discord.ButtonStyle.green , emoji='💰')
     button2 = Button(label="No",style=discord.ButtonStyle.red, emoji="🙅‍♂️")
     
     async def button_action(interaction):
         await interaction.response.send_message(content="aaaa",allowed_mentions=None)
-    
     button1.callback = button_action
     
     view =  View()
@@ -112,7 +180,7 @@ async def decida(ctx, *choices: str):
 
 
 @bot.command()
-async def repeat(ctx, times: int , content='repeating...'):
+async def repetir(ctx, times: int , content='repeating...'):
     """Repeats a message multiple times."""
     for i in range(times):
         await ctx.send(content)
@@ -122,54 +190,9 @@ async def joined(ctx, member: discord.Member):
     """Says when a member joined."""
     await ctx.send(f'{member.name} joined {discord.utils.format_dt(member.joined_at)}')
 
-
-@bot.group()
-async def cool(ctx):
-    """Says if a user is cool.
-
-    In reality this just checks if a subcommand is being invoked.
-    """
-    if ctx.invoked_subcommand is None:
-        await ctx.send(f'No, {ctx.subcommand_passed} is not cool')
-        
-
-@cool.command(name='bot')
-async def _bot(ctx):
-    """Is the bot cool?"""
-    await ctx.send('Yes, the bot is cool.')
-
 @bot.command()
 async def test(ctx):
       await ctx.send (ctx.message.author)
-
-class User():
-    def __init__(self,userid,name,apelido):
-        self.id = userid
-        self.name = name
-        self.balance = 0
-        self.apelido = apelido
-        self.bank = 0
-        
-    def work(self,value):
-        self.balance += value
-            
-    def saldo(self):
-        string_formatada =(
-        f'{self.name}\n'
-        f':money_with_wings: : {self.balance}\n'
-        f':bank: : {self.bank}'
-        )
-        return string_formatada 
-    
-    def deposito(self,value):
-        self.bank += value
-    
-    def saque(self,value):
-        self.balance+=value
-        self.bank-=value
-
-    def getsaldo(self):
-        return self.balance
 
 @bot.command()
 async def trabalhar(ctx):
@@ -198,21 +221,13 @@ async def trabalhar(ctx):
     
     user_list[user_id].work(value)
     await ctx.send (resp)
-                    
-
-def verificaUsuario(user):
-    user_id = user.id
-    username = user.name 
-    apelido = user.display_name
-    if(user_id not in user_list):
-        user_list.update({user_id:User(user_id,username,apelido)})
 
 @bot.command()
 async def saldo(ctx):
     #print(type(ctx.message.author.name))
     user_id = ctx.message.author.id
     user = user_list[user_id]   
-    await ctx.send (embed=embed_msg(ctx,None,None,None,user.saldo()))
+    await ctx.send (embed=embed_msg(ctx ,icon_header = ctx.author.display_avatar ,title_header=ctx.author,title_content="Saldo", desc_content = user.saldo()))
 
 
 @bot.command()
@@ -239,8 +254,8 @@ async def members(ctx):
     for guild in bot.guilds:
         print(guild)
         for member in guild.members:
-            print(member.id)
-            print(user_list.keys())
+            #print(member.id)
+            #print(user_list.keys())
             string_member +=f'\n{member}'
     await ctx.send (string_member)
 
