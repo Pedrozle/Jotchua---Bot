@@ -1,4 +1,5 @@
 from datetime import datetime
+from email import message
 from logging import raiseExceptions
 import discord, os, random
 from discord import app_commands
@@ -8,6 +9,7 @@ from dotenv import load_dotenv
 from discord.utils import get
 
 from discord.ui import Button , View
+from jinja2 import pass_context
 
 user_list = {}
 
@@ -21,6 +23,21 @@ intents.message_content = True
 
 bot = commands.Bot(command_prefix=['jot!','j!'], description=description, intents=intents)
 
+cogs = ["commands.rp"]
+
+
+@bot.event
+async def on_ready():
+    print(f'Logged in as {bot.user} (ID: {bot.user.id})')
+    print('------')
+    for guild in bot.guilds:
+        print(guild)
+        for member in guild.members:
+            verificaUsuario(member)
+            print(member)
+    print('------')
+    for cog in cogs:
+        await bot.load_extension(cog)
 
 def updateData(ctx):
     if(ctx.id != bot.user.id):
@@ -37,16 +54,7 @@ async def on_message(message):
     message.content = message.content.lower()
     await bot.process_commands(message)
 
-@bot.event
-async def on_ready():
-    print(f'Logged in as {bot.user} (ID: {bot.user.id})')
-    print('------')
-    for guild in bot.guilds:
-        print(guild)
-        for member in guild.members:
-            verificaUsuario(member)
-            print(member)
-    print('------')
+
 
 
 def tavazio(content):
