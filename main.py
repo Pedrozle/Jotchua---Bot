@@ -5,8 +5,8 @@ import discord, os, random
 from discord import app_commands
 from discord.ext import commands
 from dotenv import load_dotenv
-
 from discord.utils import get
+from classes.user import User 
 
 from discord.ui import Button , View
 from jinja2 import pass_context
@@ -40,11 +40,11 @@ async def on_ready():
         await bot.load_extension(cog)
 
 def updateData(ctx):
+    name = ctx.name
+    display_name = ctx.display_name
     if(ctx.id != bot.user.id):
-        if(user_list[ctx.id].name.lower() != ctx.name.lower()):
-            user_list[ctx.id] = ctx.name.lower()
-        if(user_list[ctx.id].apelido.lower() != ctx.display_name.lower()):
-            user_list[ctx.id].apelido = ctx.display_name.lower()
+        if(user_list[ctx.id].apelido.lower() != display_name.lower()):
+            user_list[ctx.id].apelido = display_name.lower()
     
 
 @bot.event
@@ -56,21 +56,136 @@ async def on_message(message):
 
 
 
+def verificaUsuario(user):
+    user_id = user.id
+    username = user.name 
+    apelido = user.display_name
+    if(user_id not in user_list):
+        user_list.update({user_id:User(user_id,username,apelido)})
 
 def tavazio(content):
     if(not content):
         return True
     else:
         return False
+    
+class BankView(View):
+    def __init__(self,tipo,valor,user_id):
+        super().__init__(timeout=3)
+        self.tipo = tipo
+        self.valor = valor
+        self.user_id = user_id
+    
+    @discord.ui.button(label="Sim",style=discord.ButtonStyle.green , emoji='💰',custom_id="deposit_sim")
+    async def button_callback(self,button,interaction):
+        for x in self.children:
+            x.disabled = True
+            
+        if(interaction.user.id == self.user_id):
+            if(self.tipo == "Deposito"):
+                user_list[self.user_id].deposito(self.valor)
+        else:
+            user_list[self.user_id].saque(self.valor)
+        
+        await interaction.response.send_message(content=f"{tipo} Com sucesso")
+        await interaction.response.edit_message(view=self)
+        
+    @discord.ui.button(label="Nao",style=discord.ButtonStyle.red , emoji='🙅‍♂️',custom_id="deposit_no")
+    async def button_callback(self,button,interaction):
+        for x in self.children:
+            x.disabled = True
+        await interaction.response.send_message(content=f"Operacao Cancelada")
+        await interaction.response.edit_message(view=self)
+        
+    async def on_timeout(self):
+        self.ctx.send(f"Operacao Cancelada")
+        return
+        
+async def transacao2(ctx,tipo : str, valor : str | int = None):
+    user_id = ctx.author.id
+    saldo = 0 
+    user = user_list[user_id]
+    if(tipo == "Deposito"):
+        saldo = user_list[user_id].getsaldo()
+    else:
+        saldo = user_list[user_id].getpoup()
+    
+    if(valor == None):
+        await ctx.send(f':no_entry_sign: Necessario Especificar valor 1')
+        return
+    else:
+        if(valor.isdigit() == False and valor not in ['all','tudo']):
+            await ctx.send(f':no_entry_sign: Necessario Especificar valor 2')
+            return
+        
+    quantidade = saldo if valor in ['all','tudo'] else int(valor)        
+    if(saldo <= 0 or quantidade > saldo ):
+        await ctx.send(f':no_entry_sign: Você não possui **{valor}** :dollar: Para {tipo}')
+        return
+    view =  BankView(tipo,quantidade,user_id)
+    await ctx.send(f'Comfirme que deseja {tipo} {quantidade}:dollar: ',view=view)
+        
+
+async def transacao(ctx,tipo : str, valor : str | int = None):
+    user_id = ctx.author.id
+    saldo = 0 
+    user = user_list[user_id]
+    if(tipo == "Deposito"):
+        saldo = user_list[user_id].getsaldo()
+    else:
+        saldo = user_list[user_id].getpoup()
+    
+    if(valor == None):
+        await ctx.send(f':no_entry_sign: Necessario Especificar valor 1')
+        return
+    else:
+        if(valor.isdigit() == False and valor not in ['all','tudo']):
+            await ctx.send(f':no_entry_sign: Necessario Especificar valor 2')
+            return
+        
+    quantidade = saldo if valor in ['all','tudo'] else int(valor)        
+    if(saldo <= 0 or quantidade > saldo ):
+        await ctx.send(f':no_entry_sign: Você não possui **{valor}** :dollar: Para {tipo}')
+        return
+    
+    button1 = Button(label="Sim",style=discord.ButtonStyle.green , emoji='💰')
+    button2 = Button(label="No",style=discord.ButtonStyle.red, emoji="🙅‍♂️")
+    
+    async def button1_action(interaction):
+        if(interaction.user.id == user_id):
+            if(tipo == "Deposito"):
+                user_list[user_id].deposito(quantidade)
+            else:
+                user_list[user_id].saque(quantidade)
+            await interaction.response.send_message(content=f"{tipo} Com sucesso")
+    async def button2_action(interaction):
+        if(interaction.user.id == user_id):
+            await interaction.response.send_message(content=f"{tipo} Cancelado")
+    
+    button1.callback = button1_action
+    button2.callback = button2_action
+    
+    view =  View()
+    view.add_item(button1)
+    view.add_item(button2)
+    
+    await ctx.send(f'Comfirme que deseja {tipo} {quantidade}:dollar: ',view=view)
+
+@bot.command()
+async def depositar(ctx, valor : str = None):
+    view = await transacao(ctx,"Deposito",valor)
+    
+@bot.command()
+async def saque(ctx, valor : str = None):
+    view =  await transacao(ctx,"Saque",valor)
 
 @bot.command()
 async def butao(ctx):
-    button1 = Button(label="Sim",style=discord.ButtonStyle.green , emoji="💰")
+    button1 = Button(label="Sim",style=discord.ButtonStyle.green , emoji='💰')
     button2 = Button(label="No",style=discord.ButtonStyle.red, emoji="🙅‍♂️")
     
     async def button_action(interaction):
         await interaction.response.send_message(content="aaaa",allowed_mentions=None)
-    
     button1.callback = button_action
     
     view =  View()
@@ -128,36 +243,6 @@ async def joined(ctx, member: discord.Member):
     """Diz quando um usuário entrou no servidor"""
     await ctx.send(f'{member.name} joined {discord.utils.format_dt(member.joined_at)}')
 
-
-class User():
-    def __init__(self,userid,name,apelido):
-        self.id = userid
-        self.name = name
-        self.balance = 0
-        self.apelido = apelido
-        self.bank = 0
-        
-    def work(self,value):
-        self.balance += value
-            
-    def saldo(self):
-        string_formatada =(
-        f'{self.name}\n'
-        f':money_with_wings: : {self.balance}\n'
-        f':bank: : {self.bank}'
-        )
-        return string_formatada 
-    
-    def deposito(self,value):
-        self.bank += value
-    
-    def saque(self,value):
-        self.balance+=value
-        self.bank-=value
-
-    def getsaldo(self):
-        return self.balance
-
 @bot.command()
 async def trabalhar(ctx):
     """Você sai a trabalho e recebe um salário!."""
@@ -187,14 +272,6 @@ async def trabalhar(ctx):
     
     user_list[user_id].work(value)
     await ctx.send (resp)
-                    
-
-def verificaUsuario(user):
-    user_id = user.id
-    username = user.name 
-    apelido = user.display_name
-    if(user_id not in user_list):
-        user_list.update({user_id:User(user_id,username,apelido)})
 
 @bot.command()
 async def saldo(ctx):
@@ -202,7 +279,7 @@ async def saldo(ctx):
     
     user_id = ctx.message.author.id
     user = user_list[user_id]   
-    await ctx.send (embed=embed_msg(ctx,None,None,None,user.saldo()))
+    await ctx.send (embed=embed_msg(ctx ,icon_header = ctx.author.display_avatar ,title_header=ctx.author,title_content="Saldo", desc_content = user.saldo()))
 
 
 @bot.command()
@@ -341,5 +418,21 @@ async def info(ctx: commands.Context, username: str = None):
     desc = f"Entrou no servidor há {diff.days} dias!"
     footer = f"Perguntado por {ctx.author}"
     await ctx.send(embed=embed_msg(ctx, title_header=title_header, title_content=username, desc_content=desc, img_content=avatar, footer=footer))
+
+
+@bot.group()
+async def cool(ctx):
+    """Says if a user is cool.
+
+    In reality this just checks if a subcommand is being invoked.
+    """
+    if ctx.invoked_subcommand is None:
+        await ctx.send(f'No, {ctx.subcommand_passed} is not cool')
+        
+
+@cool.command(name='bot')
+async def _bot(ctx):
+    """Is the bot cool?"""
+    await ctx.send('Yes, the bot is cool.')
 
 bot.run(os.getenv('BOT_TOKEN'))
