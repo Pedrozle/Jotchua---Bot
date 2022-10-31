@@ -48,4 +48,4 @@ async def on_ready():
     for cog in cogs:
         await bot.load_extension(cog)
 
-bot.run(os.getenv('BOT_TOKEN_DEV'))
+bot.run(os.getenv('BOT_TOKEN'))
