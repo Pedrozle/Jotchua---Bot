@@ -23,7 +23,7 @@ def inserir_varios_na_colecao(nome_colecao: str, objs: list):
     colecao.insert_many(objs)
 
 
-def inserir_na_colecao(nome_colecao: str, obj):
+def inserir_na_colecao(nome_colecao: str, obj: dict):
     colecao = discord_db.get_collection(nome_colecao)
     colecao.insert_one(obj)
 
@@ -50,6 +50,10 @@ def buscar_um_na_colecao(nome_colecao: str, usuario: dict):
 # ---------------------- Funções para Update ----------------------
 def atualizar_um_na_colecao(nome_colecao: str, usuario: dict, novos_dados: dict):
     """Atualiza os dados do objeto de acordo com os novos dados
+
+    usuario = {
+        "id": id
+    }
 
     novos_dados = {
         "$set": {"Nome_Campo": "Novo_Valor},

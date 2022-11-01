@@ -4,7 +4,7 @@ from discord.ext import commands
 
 from dotenv import load_dotenv
 
-from methods import getUser_list, verificaUsuario
+from methods import getUser_list, verificaUsuario, atualizar_lista_usuarios
 
 load_dotenv()
 description = '''Jotchua - Bot é o seu mais novo bot que você vai amar ter em seu servidor, auauau caralho'''
@@ -41,8 +41,9 @@ async def on_ready():
     print('------')
     for guild in bot.guilds:
         print(guild)
+        atualizar_lista_usuarios(str(guild.id))
         for member in guild.members:
-            verificaUsuario(member)
+            verificaUsuario(member, str(guild.id))
             print(member)
     print('------')
     for cog in cogs:

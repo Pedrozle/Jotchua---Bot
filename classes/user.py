@@ -1,13 +1,26 @@
-class User():
-    def __init__(self, userid, name, apelido):
-        self.id = userid
-        self.name = name
-        self.balance = 0
-        self.apelido = apelido
-        self.bank = 0
+import json
+import sys
+sys.path.insert(1, '/path/to/application/app/folder')
+import db.mongo as mongo
 
-    def work(self, value):
+
+class User():
+    def __init__(self, dict):
+
+        """ Instancia um novo objeto User com os seguintes atributos:
+        self.id
+        self.name
+        self.balance
+        self.apelido
+        self.bank
+        """
+
+        for key in dict:
+            setattr(self, key, dict[key])
+
+    def work(self, colecao, value):
         self.balance += value
+        mongo.atualizar_um_na_colecao(nome_colecao=colecao, usuario={"id": self.id}, novos_dados={"$set": {"balance": self.balance}})
 
     def saldo(self):
         string_formatada = (
@@ -16,16 +29,21 @@ class User():
         )
         return string_formatada
 
-    def deposito(self, value):
+    def deposito(self, colecao, value):
         self.balance -= value
         self.bank += value
+        mongo.atualizar_um_na_colecao(nome_colecao=colecao, usuario={"id": self.id}, novos_dados={"$set": {"balance": self.balance, "bank": self.bank}})
 
-    def saque(self, value):
+    def saque(self, colecao, value):
         self.balance += value
         self.bank -= value
+        mongo.atualizar_um_na_colecao(nome_colecao=colecao, usuario={"id": self.id}, novos_dados={"$set": {"balance": self.balance, "bank": self.bank}})
 
     def getsaldo(self):
         return self.balance
 
     def getpoup(self):
         return self.bank
+    
+    def getId(self):
+        return self.id

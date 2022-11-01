@@ -12,7 +12,7 @@ async def placar(ctx):
     users=''
     sorted_list = list(user_list.values())
     sorted_list.sort(key=lambda x: x.balance, reverse=True)
-    users +="\n" . join(f'**{index+1}.** {user.name} - :dollar: {user.balance}' for index,user in enumerate(sorted_list))
+    users +="\n" . join(f'**{index+1}.** {user.name} - :dollar: {user.balance + user.bank}' for index,user in enumerate(sorted_list))
     await ctx.send (embed=embed_msg( 
                                     ctx, 
                                     ctx.guild.icon.url , 
@@ -55,8 +55,8 @@ async def trabalhar(ctx):
     }
     
     resp = response_text[choice]
-    
-    user_list[user_id].work(value)
+    colecao = str(ctx.guild.id)
+    user_list[user_id].work(colecao, value)
     await ctx.send (resp)
 
 @commands.command()
@@ -127,9 +127,10 @@ async def roubar(ctx: commands.Context, Username:str):
                 resp = f"> {ladrao.name} Roubou a pequena quantia de ({emoji}{value}) do <@{user.id}>"
     else:
         resp = f"> {user.name} Não tem 1 centavo na mao"
-        
-    user_list[user.id].work(value*-1)
-    user_list[ladrao.id].work(value)
+    
+    colecao = str(ctx.guild.id)
+    user_list[user.id].work(colecao ,value*-1)
+    user_list[ladrao.id].work(colecao, value)
     
     await ctx.channel.send(resp)
     
