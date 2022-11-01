@@ -1,3 +1,5 @@
+[![Python application](https://github.com/Pedrozle/Jotchua---Bot/actions/workflows/python-app.yml/badge.svg?branch=main)](https://github.com/Pedrozle/Jotchua---Bot/actions/workflows/python-app.yml)
+
 # Jotchua Bot! 🐶
 
 Olá! Boas vindas ao repositório do **Jotchua Bot**. 
