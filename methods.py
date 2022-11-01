@@ -45,7 +45,7 @@ def tavazio(content):
         return False
 
 
-async def transacao2(ctx, tipo: str, valor: str | int = None):
+async def transacao(ctx, tipo: str, valor: str | int = None):
     user_id = ctx.author.id
     saldo = 0
     user = user_list[user_id]
@@ -70,7 +70,7 @@ async def transacao2(ctx, tipo: str, valor: str | int = None):
     await ctx.send(f'Comfirme que deseja {tipo} {quantidade}:dollar: ', view=view)
 
 
-async def transacao(ctx, tipo: str, valor: str | int = None):
+async def transacao2(ctx, tipo: str, valor: str | int = None):
     colecao = str(ctx.guild.id)
     user_id = ctx.author.id
     saldo = 0
