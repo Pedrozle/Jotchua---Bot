@@ -1,22 +1,41 @@
+import json
 import random
 import discord
+import db.mongo as mongo
 from discord.ui import View, Button
 
 from classes.user import User
 
 user_list = {}
 
+def atualizar_lista_usuarios(nome_colecao: str):
+    dados = mongo.buscar_varios_na_colecao(nome_colecao)
+    print("Dados\n")
+    for dado in dados:
+        usuario = User(dado)
+        user_list.update({usuario.getId(): usuario})
+
+
 
 def getUser_list():
     return user_list
 
 
-def verificaUsuario(user):
+def verificaUsuario(user, nome_colecao:str):
     user_id = user.id
     username = user.name
     apelido = user.display_name
     if (user_id not in user_list):
-        user_list.update({user_id: User(user_id, username, apelido)})
+        dict = {
+            "id" : user_id,
+            "name": username,
+            "balance": 0,
+            "apelido": apelido,
+            "bank": 0
+        }
+        usuario = User(dict)
+        user_list.update({user_id: usuario})
+        mongo.inserir_na_colecao(nome_colecao, usuario.__dict__)
 
 
 def tavazio(content):
@@ -52,6 +71,7 @@ async def transacao2(ctx, tipo: str, valor: str | int = None):
 
 
 async def transacao(ctx, tipo: str, valor: str | int = None):
+    colecao = str(ctx.guild.id)
     user_id = ctx.author.id
     saldo = 0
     user = user_list[user_id]
@@ -79,9 +99,9 @@ async def transacao(ctx, tipo: str, valor: str | int = None):
     async def button1_action(interaction):
         if (interaction.user.id == user_id):
             if (tipo == "Deposito"):
-                user_list[user_id].deposito(quantidade)
+                user_list[user_id].deposito(colecao, quantidade)
             else:
-                user_list[user_id].saque(quantidade)
+                user_list[user_id].saque(colecao, quantidade)
             await interaction.response.send_message(content=f"{tipo} Com sucesso")
 
     async def button2_action(interaction):
