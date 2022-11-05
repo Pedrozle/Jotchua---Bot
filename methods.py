@@ -15,8 +15,6 @@ def atualizar_lista_usuarios(nome_colecao: str):
         usuario = User(dado)
         user_list.update({usuario.getId(): usuario})
 
-
-
 def getUser_list():
     return user_list
 
